@@ -31,7 +31,6 @@ class Graph:
         x_dist = vertex1.x - vertex2.x
         y_dist = vertex1.y - vertex2.y
         dist = math.sqrt((x_dist**2)+(y_dist**2))
-        #print(dist)
         return round(dist)
 
 
@@ -41,8 +40,9 @@ class Graph:
 
         for i in range(self.cityCount):
             for j in range(self.cityCount):
-                if i != j:
+                if i != j and self.distances[i][j] == 0:
                     self.distances[i][j] = self.calculate_edge(self.vertices[i], self.vertices[j])
+                    self.distances[j][i] = self.distances[i][j]
                 #print(self.distances[i][j])
 
 
@@ -52,16 +52,14 @@ class Graph:
 
 
 
-def nearestNeighborTSP(cities):
-    # start at first city given; **or we can change to something else
-    start = cities.vertices[0]
+def nearestNeighborTSP(cities, start_city):
+    start = cities.vertices[start_city]
     currentCity = start
     path = [currentCity.id]
     solution = 0
 
-    unvisited = set(city.id for city in cities.vertices[1:])
-    #print([vertex.id for vertex in unvisited])
-    #print(unvisited)
+    unvisited = set(city.id for city in cities.vertices[:])
+    unvisited.remove(start_city)
 
     # ** I didn't see a way to remove objects from
     # a set based on the object's attribute, so I changed it to
@@ -74,9 +72,6 @@ def nearestNeighborTSP(cities):
                 edgeLength = cities.check_distance(currentCity, cities.vertices[cityID])
                 nextCityID = cityID
 
-        print(cities.check_distance(currentCity, cities.vertices[nextCityID]), " to city ", nextCityID)
-
-
         path.append(nextCityID)
         solution = solution + cities.check_distance(currentCity, cities.vertices[nextCityID])
 
@@ -84,14 +79,11 @@ def nearestNeighborTSP(cities):
         currentCity = cities.vertices[nextCityID]
 
     solution = solution + cities.check_distance(currentCity, start)
-    print(cities.check_distance(currentCity, start), " distance to starting point")
-
-    print("path length is ", solution)
-    print(path)
     return solution, path
 
 
 
+start = time.time()
 
 
 # input file is last in command line args
@@ -110,15 +102,30 @@ for line in file_in:
     cities.add_vertex(arr[0], arr[1], arr[2])
 
 
-start = time.time()
-
-# calculate the distances and run algorithm
+# calculate the distances and run algorithm once
 cities.build_dist_matrix()
-solution, path = nearestNeighborTSP(cities)
+#solution, final_path = nearestNeighborTSP(cities, 0)
 
-finish = time.time()
-elapsed = (finish - start) * 1000
-print("time taken was ", elapsed, " ms")
+
+# run repetitive nearest neighbor with variable number of  startpoints
+solution = float('inf')
+if cities.cityCount > 5000:
+    startpoints = 5
+elif cities.cityCount > 2000:
+    startpoints = 11
+elif cities.cityCount > 1000:
+    startpoints = 35
+elif cities.cityCount > 500:
+    startpoints = 100
+else:
+    startpoints = cities.cityCount
+
+for x in range(startpoints):
+    distance, path = nearestNeighborTSP(cities, x)
+    if(distance < solution):
+        solution = distance
+        final_path = path
+
 
 # test distance calculator
 #print(cities.calculate_edge(cities.vertices[5], cities.vertices[1]))
@@ -129,9 +136,16 @@ print("time taken was ", elapsed, " ms")
 
 # output first line is total distance, then city IDs
 file_out.write(str(solution) + '\n')
-for city in path:
+for city in final_path:
     file_out.write(str(city) + '\n')
-
+    print(city)
 
 file_in.close()
 file_out.close()
+
+finish = time.time()
+elapsed = (finish - start) * 1000
+
+print("path length is ", solution)
+print("time taken was ", elapsed, " ms")
+
