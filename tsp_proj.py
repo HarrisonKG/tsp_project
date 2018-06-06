@@ -79,6 +79,19 @@ def nearestNeighborTSP(cities, start_city):
 
 
 
+def repetitive_NN(startpoints):
+    solution = float('inf')
+
+    for x in range(startpoints):
+        distance, path = nearestNeighborTSP(cities, x)
+        if(distance < solution):
+            solution = distance
+            final_path = path
+
+    return(solution, final_path)
+
+
+
 
 start = time.time()
 
@@ -102,34 +115,23 @@ for line in file_in:
 cities.build_dist_matrix()
 
 
-# run repetitive nearest neighbor with variable number of  startpoints
-solution = float('inf')
-
-if cities.cityCount > 5000:
-    startpoints = 5
-elif cities.cityCount > 2000:
-    startpoints = 11
-elif cities.cityCount > 1000:
-    startpoints = 35
+# determine algorithm by input size
+if cities.cityCount > 1000:
+    # run christofides, no opt
 elif cities.cityCount > 500:
-    startpoints = 70
+    solution, path = repetitive_NN(70)
 elif cities.cityCount > 250:
-    startpoints = 150
+    solution, path = repetitive_NN(150)
+elif cities.cityCount > 100:
+    solution, path = repetitive_NN(cities.cityCount)
 else:
-    startpoints = cities.cityCount
-
-
-for x in range(startpoints):
-    distance, path = nearestNeighborTSP(cities, x)
-    if(distance < solution):
-        solution = distance
-        final_path = path
+    # run christofides with 2-opt
 
 
 
 # output first line is total distance, then city IDs
 file_out.write(str(solution) + '\n')
-for city in final_path:
+for city in path:
     file_out.write(str(city) + '\n')
     print(city)
 
