@@ -43,7 +43,6 @@ class Graph:
                 if i != j and self.distances[i][j] == 0:
                     self.distances[i][j] = self.calculate_edge(self.vertices[i], self.vertices[j])
                     self.distances[j][i] = self.distances[i][j]
-                #print(self.distances[i][j])
 
 
     def check_distance(self, vertex1, vertex2):
@@ -61,9 +60,6 @@ def nearestNeighborTSP(cities, start_city):
     unvisited = set(city.id for city in cities.vertices[:])
     unvisited.remove(start_city)
 
-    # ** I didn't see a way to remove objects from
-    # a set based on the object's attribute, so I changed it to
-    # be a set of just the city IDs. There might be a better way
     while unvisited:
         edgeLength = float('inf')
         # determine shortest edge on current vertex
@@ -83,8 +79,8 @@ def nearestNeighborTSP(cities, start_city):
 
 
 
-start = time.time()
 
+start = time.time()
 
 # input file is last in command line args
 filename = sys.argv[-1]
@@ -104,11 +100,11 @@ for line in file_in:
 
 # calculate the distances and run algorithm once
 cities.build_dist_matrix()
-#solution, final_path = nearestNeighborTSP(cities, 0)
 
 
 # run repetitive nearest neighbor with variable number of  startpoints
 solution = float('inf')
+
 if cities.cityCount > 5000:
     startpoints = 5
 elif cities.cityCount > 2000:
@@ -116,9 +112,12 @@ elif cities.cityCount > 2000:
 elif cities.cityCount > 1000:
     startpoints = 35
 elif cities.cityCount > 500:
-    startpoints = 100
+    startpoints = 70
+elif cities.cityCount > 250:
+    startpoints = 150
 else:
     startpoints = cities.cityCount
+
 
 for x in range(startpoints):
     distance, path = nearestNeighborTSP(cities, x)
@@ -126,12 +125,6 @@ for x in range(startpoints):
         solution = distance
         final_path = path
 
-
-# test distance calculator
-#print(cities.calculate_edge(cities.vertices[5], cities.vertices[1]))
-
-# test distance retrieval
-#print(cities.check_distance(cities.vertices[1], cities.vertices[2]))
 
 
 # output first line is total distance, then city IDs
